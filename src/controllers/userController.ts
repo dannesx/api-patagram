@@ -1,11 +1,15 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export const getUser = async (req: Request, res: Response) => {
+export const getUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
 	const { id } = req.params
 
 	try {
@@ -19,15 +23,15 @@ export const getUser = async (req: Request, res: Response) => {
 			res.status(404).json({ error: 'User not found' })
 		}
 	} catch (error) {
-		if (error instanceof Error) {
-			res.status(500).json({ error: error.message })
-		} else {
-			res.status(500).json({ error: 'An unkown error occurred' })
-		}
+		next(error)
 	}
 }
 
-export const newUser = async (req: Request, res: Response) => {
+export const newUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
 	const { username, email, password } = req.body
 
 	if (!username || !email || !password) {
@@ -48,17 +52,20 @@ export const newUser = async (req: Request, res: Response) => {
 	} catch (error) {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			if (error.code === 'P2002') {
-				res.status(400).json({ error: 'Username or email already exists.' })
+				return res
+					.status(400)
+					.json({ error: 'Username or email already exists.' })
 			}
-		} else if (error instanceof Error) {
-			res.status(500).json({ error: error.message })
-		} else {
-			res.status(500).json({ error: 'An unknown error occurred' })
 		}
+		next(error)
 	}
 }
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
 	const { username, password } = req.body
 
 	if (!username || !password) {
@@ -77,15 +84,15 @@ export const login = async (req: Request, res: Response) => {
 			res.status(400).json({ error: 'Email or password is incorrect ' })
 		}
 	} catch (error) {
-		if (error instanceof Error) {
-			res.status(500).json({ error: error.message })
-		} else {
-			res.status(500).json({ error: 'An unknown error occurred' })
-		}
+		next(error)
 	}
 }
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
 	const { id } = req.params
 	const { username, email, password } = req.body
 
@@ -107,24 +114,20 @@ export const updateUser = async (req: Request, res: Response) => {
 		})
 		res.json(user)
 	} catch (error) {
-		if (error instanceof Error) {
-			res.status(500).json({ error: error.message })
-		} else {
-			res.status(500).json({ error: 'An unknown error occurred' })
-		}
+		next(error)
 	}
 }
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
 	const { id } = req.params
 	try {
 		await prisma.user.delete({ where: { id } })
 		res.status(204).send()
 	} catch (error) {
-		if (error instanceof Error) {
-			res.status(500).json({ error: error.message })
-		} else {
-			res.status(500).json({ error: 'An unknown error occurred' })
-		}
+		next(error)
 	}
 }
