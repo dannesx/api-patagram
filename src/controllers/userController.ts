@@ -1,10 +1,8 @@
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import dotenv from 'dotenv'
 import { PrismaClient, Prisma } from '@prisma/client'
 
-dotenv.config()
 const prisma = new PrismaClient()
 
 export const getUser = async (req: Request, res: Response) => {
@@ -32,6 +30,11 @@ export const getUser = async (req: Request, res: Response) => {
 export const newUser = async (req: Request, res: Response) => {
 	const { username, email, password } = req.body
 
+	if (!username || !email || !password) {
+		return res
+			.status(400)
+			.json({ error: 'Username, email and password are required' })
+	}
 	try {
 		const hashedPassword = await bcrypt.hash(password, 10)
 		const user = await prisma.user.create({
@@ -58,6 +61,10 @@ export const newUser = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
 	const { username, password } = req.body
 
+	if (!username || !password) {
+		return res.status(400).json({ error: 'Username and password are required' })
+	}
+
 	try {
 		const user = await prisma.user.findUnique({ where: { username } })
 
@@ -81,6 +88,13 @@ export const login = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
 	const { id } = req.params
 	const { username, email, password } = req.body
+
+	if (!username || !email || !password) {
+		return res
+			.status(400)
+			.json({ error: 'Username, email and password are required' })
+	}
+
 	try {
 		const hashedPassword = await bcrypt.hash(password, 10)
 		const user = await prisma.user.update({
