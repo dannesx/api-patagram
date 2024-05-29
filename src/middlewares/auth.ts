@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
 export const authenticateToken = (
 	req: Request,
@@ -13,13 +13,13 @@ export const authenticateToken = (
 		return res.sendStatus(401)
 	}
 
-	jwt.verify(token, process.env.JWT_SECRET as string, (err, user) => {
+	jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
 		if (err) {
 			return res.sendStatus(403)
 		}
 
-		// @ts-ignore
-		req.user = user
+		req.jwt = decoded as JwtPayload
+		console.log(req.jwt)
 		next()
 	})
 }

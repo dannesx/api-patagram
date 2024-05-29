@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { PrismaClient, Prisma } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../config/prismaConfig'
+import { Prisma } from '@prisma/client'
 
 export const getUser = async (
 	req: Request,
