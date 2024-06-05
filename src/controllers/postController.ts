@@ -20,14 +20,36 @@ export const getPosts = async (
 						email: true,
 					},
 				},
-				comments: true,
+				comments: {
+					select: {
+						id: true,
+						User: {
+							select: {
+								username: true,
+							},
+						},
+						text: true,
+						createdAt: true,
+					},
+				},
 				likes: true,
 				createdAt: true,
 				updatedAt: true,
 			},
 			orderBy: { createdAt: 'desc' },
 		})
-		res.json(posts)
+
+		const fixedPosts = posts.map(post => ({
+			...post,
+			comments: post.comments.map(comment => ({
+				id: comment.id,
+				username: comment.User.username,
+				text: comment.text,
+				createdAt: comment.createdAt,
+			})),
+		}))
+
+		res.json(fixedPosts)
 	} catch (error) {
 		next(error)
 	}
@@ -53,7 +75,18 @@ export const getPostById = async (
 						email: true,
 					},
 				},
-				comments: true,
+				comments: {
+					select: {
+						id: true,
+						User: {
+							select: {
+								username: true,
+							},
+						},
+						text: true,
+						createdAt: true,
+					},
+				},
 				likes: true,
 				createdAt: true,
 				updatedAt: true,
@@ -61,7 +94,17 @@ export const getPostById = async (
 		})
 
 		if (post) {
-			res.json(post)
+			const fixedPost = {
+				...post,
+				comments: post.comments.map(comment => ({
+					id: comment.id,
+					username: comment.User.username,
+					text: comment.text,
+					createdAt: comment.createdAt,
+				})),
+			}
+
+			res.json(fixedPost)
 		} else {
 			res.status(404).json({ error: 'Post not found' })
 		}
@@ -103,13 +146,11 @@ export const updatePost = async (
 ) => {
 	const { id } = req.params
 	const { caption } = req.body
-	const imageUrl = req.file ? req.file.path : undefined // Atualiza a URL da imagem se uma nova imagem for carregada
 
 	try {
-		const updatedData = imageUrl ? { imageUrl, caption } : { caption }
 		const updatedPost = await prisma.post.update({
 			where: { id },
-			data: updatedData,
+			data: { caption },
 		})
 		res.json(updatedPost)
 	} catch (error) {
