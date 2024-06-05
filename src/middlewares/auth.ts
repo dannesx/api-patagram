@@ -19,7 +19,6 @@ export const authenticateToken = (
 		}
 
 		req.jwt = decoded as JwtPayload
-		console.log(req.jwt)
 		next()
 	})
 }

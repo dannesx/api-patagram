@@ -25,6 +25,7 @@ export const getPosts = async (
 				createdAt: true,
 				updatedAt: true,
 			},
+			orderBy: { createdAt: 'desc' },
 		})
 		res.json(posts)
 	} catch (error) {
@@ -56,7 +57,7 @@ export const getPostById = async (
 				likes: true,
 				createdAt: true,
 				updatedAt: true,
-			}
+			},
 		})
 
 		if (post) {
@@ -128,6 +129,33 @@ export const deletePost = async (
 			where: { id },
 		})
 		res.status(204).send()
+	} catch (error) {
+		next(error)
+	}
+}
+
+export const likePost = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	const { id } = req.params
+
+	try {
+		let post = await prisma.post.findUnique({ where: { id } })
+
+		if (!post) {
+			return res.status(404).json({ error: 'Post not found ' })
+		}
+
+		post = await prisma.post.update({
+			where: { id },
+			data: {
+				likes: { increment: 1 },
+			},
+		})
+
+		return res.json(post)
 	} catch (error) {
 		next(error)
 	}
